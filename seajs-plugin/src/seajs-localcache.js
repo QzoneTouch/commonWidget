@@ -2,8 +2,9 @@ define("seajs-localcache", ['manifest'], function(require){
     if(!window.localStorage) return
     if(seajs.data.debug) return
     var module = seajs.Module,
+        data = seajs.data,
         fetch = module.prototype.fetch
-    var newManifest = require('manifest')
+    var remoteManifest = require('manifest')
 
     var storage = {
         get: function(key, parse){
@@ -55,27 +56,38 @@ define("seajs-localcache", ['manifest'], function(require){
     }
 
     var use = function(url, code){
-        code += ';//@ sourceURL='+ url  //for chrome debug
+        code += '//@ sourceURL='+ url  //for chrome debug
         run(code)
     }
 
-    var oldManifest = storage.get('manifest',true) || newManifest
+    var isCombo = function(url){
+        var sign = (data.comboSyntax && data.comboSyntax[0]) || '??'
+        return url.indexOf(sign) >= 0
+    }
+
+    var localManifest = storage.get('manifest',true) || remoteManifest
     module.prototype.fetch = function(){
         var mod = this
-        var url = mod.uri
+        seajs.emit('fetch',mod)
+        var url = mod.requestUri || mod.url
+        var isComboUrl = isCombo(url)
         var cached = storage.get(url)
         var cachedValidated = validate(url, cached)
-        if(newManifest && newManifest[url]){
+        if(remoteManifest && remoteManifest[url]){
             //in version control
-            if(oldManifest && newManifest[url] == oldManifest[url] && cachedValidated){
+            if(localManifest && remoteManifest[url] == localManifest[url] && cachedValidated){
                 //cached version is ready to go
                 use(url, cached)
+                mod.load()
             }else{
                 //otherwise, get latest version from network
-                fetchAjax(url, function(resp){
+                fetchAjax(url + '?v='+Math.random().toString(), function(resp){
                     if(resp && validate(url, resp)){
+                        localManifest[url] = remoteManifest[url]
+                        storage.set('manifest', JSON.stringify(localManifest))  //update one by one
                         storage.set(url, resp)
                         use(url, resp)
+                        mod.load()
                     }else{
                         fetch.call(mod)
                     }
@@ -86,5 +98,6 @@ define("seajs-localcache", ['manifest'], function(require){
             fetch.call(mod)
         }
     }
+
 
 })
