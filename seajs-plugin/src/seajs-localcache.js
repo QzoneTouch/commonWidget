@@ -10,6 +10,14 @@
  * 2.add "comboSyntax" to seajs.config, eg. comboSyntax:['/c/=',','], github at https://github.com/seajs/seajs-combo
  * 3.rewrite splitCombo function based on your own combo file format, add to seajs.config
  * 4.add comment tags at storage.set if you don't need automatically localstorage clean up.
+ *
+ * Config example:
+ * seajs.config({
+ *      localcache:{
+ *          validate: function(url, code){}  //validate the code from xhr
+ *          splitCombo: function(code){}  //split combo code into original single files.
+ *      }
+ * })
  */
 define("seajs-localcache", ['manifest'], function(require){
     if(!window.localStorage) return
@@ -54,30 +62,45 @@ define("seajs-localcache", ['manifest'], function(require){
         }
     }
 
+    var localManifest = storage.get('manifest',true) || {}
+
+    if(!localManifest && !remoteManifest){
+        //failed to fetch latest version and local version is broken.
+        return
+    }
+
     /**
      * Check whether the code is complete and clean
      * @param url
      * @param code
      * @return {Boolean}
      */
-    var validate = function(url, code){
+    var validate = (data.localcache && data.localcache.validate) || function(url, code){
         if(code && code.indexOf('define') >= 0) return true
         else return false
     }
 
     var fetchAjax = function(url, callback){
-        var xhr = new window.XMLHttpRequest()
-        xhr.open('GET',url,true)
-        xhr.onreadystatechange = function(){
-            if(xhr.readyState === 4){
-                if(xhr.status === 200){
-                    callback(xhr.responseText)
-                }else{
-                    callback(null)
+        (function(_callback){
+            var xhr = new window.XMLHttpRequest()
+            var timer = setTimeout(function(){
+                xhr.abort()
+                _callback(null)
+            },30000)
+            xhr.open('GET',url,true)
+            xhr.onreadystatechange = function(){
+                if(xhr.readyState === 4){
+                    clearTimeout(timer)
+                    if(xhr.status === 200){
+                        _callback(xhr.responseText)
+                    }else{
+                        _callback(null)
+                    }
                 }
             }
-        }
-        xhr.send(null)
+            xhr.send(null)
+
+        })(callback)
     }
 
     /**
@@ -117,8 +140,7 @@ define("seajs-localcache", ['manifest'], function(require){
      * Default: split by define(function(){})
      * @param code
      */
-    var splitCombo = data.splitCombo || function(code){
-        code = removeComments(code)
+    var splitCombo = (data.localcache && data.localcache.splitCombo) || function(code){
         var arr = code.split('define')
         var result = []
         for(var i= 0,len = arr.length;i<len;i++){
@@ -129,20 +151,7 @@ define("seajs-localcache", ['manifest'], function(require){
         return result
     }
 
-    function removeComments(code){
-        return code
-            .replace(/try\{\(function\(_w\)\{_w\._javascript_file_map.*?catch\(ign\)\{\}/mg, '')
-            .replace(/\/\*\s*\|xGv00\|.*?\*\//mg, '')
-            .replace(/^\s*\/\*[\s\S]*?\*\//mg, '') // block comments
-            .replace(/^\s*\/\/.*$/mg, '') // line comments
-    }
 
-    var localManifest = storage.get('manifest',true) || remoteManifest
-
-    if(!localManifest && !remoteManifest){
-        //failed to fetch latest version and local version is broken.
-        return
-    }
     var fetchingList = {}
     var onLoad = function(url){
         var mods = fetchingList[url]
@@ -209,6 +218,7 @@ define("seajs-localcache", ['manifest'], function(require){
                 }
                 var splitedCode = splitCombo(resp)
                 if(splited.files.length == splitedCode.length){
+                    //ensure they are matched with each other
                     for(var i= 0,len = splited.files.length;i<len;i++){
                         var file = splited.host + splited.files[i]
                         localManifest[file] = remoteManifest[file]
