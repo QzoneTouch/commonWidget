@@ -20,8 +20,7 @@
  * })
  */
 define("seajs-localcache", ['manifest'], function(require){
-    if(!window.localStorage) return
-    if(seajs.data.debug) return
+    if(!window.localStorage || seajs.data.debug) return
 
     var module = seajs.Module,
         data = seajs.data,
