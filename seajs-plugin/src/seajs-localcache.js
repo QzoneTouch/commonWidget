@@ -14,8 +14,9 @@
  * Config example:
  * seajs.config({
  *      localcache:{
- *          validate: function(url, code){}  //validate the code from xhr
- *          splitCombo: function(code){}  //split combo code into original single files.
+ *          validate: function(url, code){},  //validate the code from xhr
+ *          splitCombo: function(code){},  //split combo code into original single files.
+ *          timeout: 30000  //timeout for xhr request
  *      }
  * })
  */
@@ -24,7 +25,8 @@ define("seajs-localcache", ['manifest'], function(require){
 
     var module = seajs.Module,
         data = seajs.data,
-        fetch = module.prototype.fetch
+        fetch = module.prototype.fetch,
+        defaultSyntax = ['??',',']
     var remoteManifest = require('manifest')
 
     var storage = {
@@ -85,7 +87,7 @@ define("seajs-localcache", ['manifest'], function(require){
             var timer = setTimeout(function(){
                 xhr.abort()
                 _callback(null)
-            },30000)
+            }, (data.localcache && data.localcache.timeout) || 30000)
             xhr.open('GET',url,true)
             xhr.onreadystatechange = function(){
                 if(xhr.readyState === 4){
@@ -120,7 +122,7 @@ define("seajs-localcache", ['manifest'], function(require){
     }
 
     var splitComboUrl = function(url){
-        var syntax = data.comboSyntax || ['??',',']
+        var syntax = data.comboSyntax || defaultSyntax
         var arr = url.split(syntax[0])
         if(arr.length != 2) return url
         var host = arr[0]
@@ -208,8 +210,8 @@ define("seajs-localcache", ['manifest'], function(require){
                 onLoad(url)  //all cached
                 return
             }
-            var syntax = data.comboSyntax || ['??',',']
-            var comboUrl = splited.host + syntax[0] + splited.files.join(syntax[1])
+            var syntax = data.comboSyntax || defaultSyntax,
+                comboUrl = splited.host + syntax[0] + splited.files.join(syntax[1])
             fetchAjax(comboUrl + '?v='+Math.random().toString(), function(resp){
                 if(!resp){
                     fetch.call(mod)
@@ -227,7 +229,7 @@ define("seajs-localcache", ['manifest'], function(require){
                     storage.set('manifest', JSON.stringify(localManifest))
                     onLoad(url)
                 }else{
-                    //filenames and codes not matched, discharge atm. (try to match them).
+                    //filenames and codes not matched, fetched code is broken at somewhere.
                     fetch.call(mod)
                 }
             })
