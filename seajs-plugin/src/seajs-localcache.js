@@ -163,7 +163,7 @@ define("seajs-localcache", ['manifest'], function(require){
     module.prototype.fetch = function(){
         var mod = this
         seajs.emit('fetch',mod)
-        var url = mod.requestUri || mod.url
+        var url = mod.requestUri || mod.uri
         var isComboUrl = isCombo(url)
 
         if(fetchingList[url]){
