@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Image View</title>
+    <meta name="format-detection" content="telephone=no" />
+    <meta name="HandheldFriendly" content="True">
+    <meta name="MobileOptimized" content="320">
+    <meta name="viewport" content="width=320,initial-scale=1,minimum-scale=1, maximum-scale=1, user-scalable=no" />
+    <meta name="viewport" content="width=319.9,initial-scale=1,minimum-scale=1, maximum-scale=1, user-scalable=no" media="(device-height: 568px)" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <script type="text/javascript" src="../../public/sea.js"></script>
+    <style type="text/css">
+        *{
+            margin: 0;
+            padding: 0;
+        }
+        ul{
+            list-style: none;
+        }
+        .slide-view {
+            background: rgb(0, 0, 0);
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            top: 0;
+            left: 0;
+            z-index: 10;
+        }
+        .pv-inner {
+            position: relative;
+            z-index: -1;
+            display: -webkit-box;
+            display: -moz-box;
+            display: box;
+            width: 100%;
+            height: 100%;
+            -webkit-transition: all 350ms linear;
+            -webkit-backface-visibility: hidden;
+            -moz-transition: all 350ms linear;
+            -moz-backface-visibility: hidden;
+            transition: all 350ms linear;
+            backface-visibility: hidden;
+        }
+        .pv-inner li {
+            text-align: center;
+        }
+        .pv-inner img {
+            max-width: 97%;
+            vertical-align: middle;
+            -webkit-transform: scale(1) translate(0px,0px);
+            -moz-transform: scale(1) translate(0px,0px);
+            transform: scale(1) translate(0px,0px);
+            max-height: 100%;
+            visibility: visible;
+            -webkit-transition: 200ms;
+            -moz-transition: 200ms;
+            transition: 200ms;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            user-select: none;
+        }
+        .slide-view .counts {
+            position: absolute;
+            top: 5%;
+            left: 0;
+            right: 0;
+            text-align: center;
+        }
+        .slide-view .counts .value {
+            border-radius: 9px;
+            line-height: 18px;
+            padding: 0 6px;
+            font-size: 11px;
+            display: inline-block;
+            background-color: rgba(102, 102, 102, 0.6);
+            color: rgb(241, 241, 241);
+        }
+
+        .slide-view .ui-loading {
+            position: absolute;
+            margin: -10px 0 0 -10px;
+            left: 50%;
+            top: 50%;
+        }
+        .ui-loading {
+            display: inline-block;
+            position: relative;
+            width: 40px;
+            height: 20px;
+            vertical-align: middle;
+            margin: -4px 2px 0 -42px;
+        }
+        .ui-loading.white i {
+            background: rgb(255, 255, 255);
+        }
+        .ui-loading i {
+            -webkit-animation: loading-spin 1s infinite linear;
+            -moz-animation: loading-spin 1s infinite linear;
+            animation: loading-spin 1s infinite linear;
+        }
+        .ui-loading i {
+            position: absolute;
+            left: 7px;
+            top: 4px;
+            display: block;
+            width: 5px;
+            height: 12px;
+            background: rgb(204, 204, 204);
+        }
+        .ui-loading i.t2 {
+            -webkit-animation-name: loading-spin-one;
+            -moz-animation-name: loading-spin-one;
+            animation-name: loading-spin-one;
+        }
+        .ui-loading i.t3 {
+            -webkit-animation-name: loading-spin-two;
+            -moz-animation-name: loading-spin-two;
+            animation-name: loading-spin-two;
+        }
+        .ui-loading i.t3 {
+            left: 23px;
+        }
+        .ui-loading i.t2 {
+            left: 15px;
+        }
+
+        .t1 {
+            font-size: 18px;
+            line-height: 24px;
+        }
+        .t2 {
+            font-size: 16px;
+            line-height: 21px;
+        }
+        .t3 {
+            font-size: 14px;
+            line-height: 18px;
+        }
+    </style>
+</head>
+<body>
+<div id="imageView" class="slide-view"></div>
+<script type="text/javascript">
+    seajs.config({
+        alias:{
+            'zepto':'../../public/zepto'
+        }
+    });
+    seajs.use(['zepto','../imageview'],function($, imageview){
+        window.$ = $;
+        var view = imageview.get('./init');
+        view.init([
+            'http://getimg.in/400x400',
+            'http://getimg.in/300x300',
+            'http://getimg.in/600x600',
+            'http://getimg.in/wrong-address',
+            'http://getimg.in/2000x200',
+            'http://getimg.in/400x400'
+        ],0);
+    });
+</script>
+</body>
+</html>

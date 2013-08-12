@@ -1,0 +1,11 @@
+<script type="text/html" id="item">
+	<ul class="pv-inner" style="line-height:<%=height%>px;">
+		<%for(var i=0;i<photos.length;i++){%>
+			<li class="pv-img" style="width:<%=width%>px;height:<%=height%>px;">
+
+			</li>
+		<%}%>
+	</ul>
+    <span class="ui-loading white" id="J_loading"><i class="t1"></i><i class="t2"></i><i class="t3"></i></span>
+	<p class="counts"><span class="value" id="J_index"><%=index+1%>/<%=photos.length%></span></p>
+</script>
