@@ -160,7 +160,7 @@ define("seajs-localcache", ['manifest'], function(require){
         while ((m = mods.shift())) m.load()
     }
 
-    module.prototype.fetch = function(){
+    module.prototype.fetch = function(requestCache){
         var mod = this
         seajs.emit('fetch',mod)
         var url = mod.requestUri || mod.uri
@@ -190,18 +190,20 @@ define("seajs-localcache", ['manifest'], function(require){
                         use(url, resp)
                         onLoad(url)
                     }else{
-                        fetch.call(mod)
+                        delete fetchingList[url]
+                        fetch.call(mod, requestCache)
                     }
                 })
             }
         }else if(isComboUrl){
             //try to find available code cache
-            var splited = splitComboUrl(url)
+            var splited = splitComboUrl(url), l = splited.files.length
             for(var i= splited.files.length - 1;i>=0;i--){
                 var file = splited.host + splited.files[i]
                 var cached = storage.get(file)
                 var cachedValidated = validate(file, cached)
-                if(remoteManifest[file] == localManifest[file] && cachedValidated){
+                // 排除 remoteManifest[file] 为 undefined 的情况
+                if(remoteManifest[file] && remoteManifest[file] == localManifest[file] && cachedValidated){
                     use(file, cached)
                     splited.files.splice(i,1)  //remove from combo
                 }
@@ -210,11 +212,18 @@ define("seajs-localcache", ['manifest'], function(require){
                 onLoad(url)  //all cached
                 return
             }
+            // 如果remoteManifest没有url的文件，直接调用fetch，可减少请求
+            if(splited.files.length == l) {
+                delete fetchingList[url]
+                fetch.call(mod, requestCache)
+                return
+            }
             var syntax = data.comboSyntax || defaultSyntax,
                 comboUrl = splited.host + syntax[0] + splited.files.join(syntax[1])
             fetchAjax(comboUrl + '?v='+Math.random().toString(), function(resp){
                 if(!resp){
-                    fetch.call(mod)
+                    delete fetchingList[url]
+                    fetch.call(mod, requestCache)
                     return
                 }
                 var splitedCode = splitCombo(resp)
@@ -230,12 +239,14 @@ define("seajs-localcache", ['manifest'], function(require){
                     onLoad(url)
                 }else{
                     //filenames and codes not matched, fetched code is broken at somewhere.
-                    fetch.call(mod)
+                    delete fetchingList[url]
+                    fetch.call(mod, requestCache)
                 }
             })
         }else{
             //not in version control, use default fetch method
-            fetch.call(mod)
+            delete fetchingList[url]
+            fetch.call(mod, requestCache)
         }
     }
 
