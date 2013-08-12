@@ -197,15 +197,18 @@ define("seajs-localcache", ['manifest'], function(require){
             }
         }else if(isComboUrl){
             //try to find available code cache
-            var splited = splitComboUrl(url), l = splited.files.length
+            var splited = splitComboUrl(url), needFetchAjax = false
             for(var i= splited.files.length - 1;i>=0;i--){
                 var file = splited.host + splited.files[i]
                 var cached = storage.get(file)
                 var cachedValidated = validate(file, cached)
                 // 排除 remoteManifest[file] 为 undefined 的情况
-                if(remoteManifest[file] && remoteManifest[file] == localManifest[file] && cachedValidated){
-                    use(file, cached)
-                    splited.files.splice(i,1)  //remove from combo
+                if(remoteManifest[file]){
+                    needFetchAjax = true
+                    if(remoteManifest[file] == localManifest[file] && cachedValidated) {
+                      use(file, cached)
+                      splited.files.splice(i,1)  //remove from combo
+                    }
                 }
             }
             if(splited.files.length == 0){
@@ -213,7 +216,7 @@ define("seajs-localcache", ['manifest'], function(require){
                 return
             }
             // 如果remoteManifest没有url的文件，直接调用fetch，可减少请求
-            if(splited.files.length == l) {
+            if(!needFetchAjax) {
                 delete fetchingList[url]
                 fetch.call(mod, requestCache)
                 return
