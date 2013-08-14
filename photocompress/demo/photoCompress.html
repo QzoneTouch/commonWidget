@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>PhotoCompress</title>
+	<meta name="format-detection" content="telephone=no"/>
+	<meta name="HandheldFriendly" content="True">
+	<meta name="MobileOptimized" content="320">
+	<meta name="viewport" content="width=320,initial-scale=1,minimum-scale=1, maximum-scale=1, user-scalable=no"/>
+	<meta name="viewport" content="width=319.9,initial-scale=1,minimum-scale=1, maximum-scale=1, user-scalable=no"
+			media="(device-height: 568px)"/>
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="apple-mobile-web-app-status-bar-style" content="black">
+	<script type="text/javascript" src="../../public/sea.js"></script>
+
+</head>
+<body>
+<script type="text/javascript">
+	seajs.config({
+		base: '../src/',
+		alias: {
+			'zepto': '../../public/zepto'
+		}
+	});
+
+	function change(event) {
+		var file = event.target.files[0];
+		seajs.use(['zepto', 'compress'], function ($, compresser) {
+			compresser.compress(file, {maxWidth: 800, maxHeight: 600, quality: .7, type:'jpeg'}, function (dataUrl) {
+				$(document.body).append('<p><img src="' + dataUrl + '"></p>');
+			});
+		});
+	}
+</script>
+
+<input type="file" onchange="change(event)">
+</body>
+</html>
