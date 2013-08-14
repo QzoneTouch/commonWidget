@@ -1,26 +1,9 @@
 /**
- * Usage:
- * seajs.config({
-        preload:['seajs-localcache']
-   })
- * default manifest filename is "manifest", read "manifest.js" for format reference
- *
- * Tips for working with combo plugin:
- * 1.load combo plugin before localcache
- * 2.add "comboSyntax" to seajs.config, eg. comboSyntax:['/c/=',','], github at https://github.com/seajs/seajs-combo
- * 3.rewrite splitCombo function based on your own combo file format, add to seajs.config
- * 4.add comment tags at storage.set if you don't need automatically localstorage clean up.
- *
- * Config example:
- * seajs.config({
- *      localcache:{
- *          validate: function(url, code){},  //validate the code from xhr
- *          splitCombo: function(code){},  //split combo code into original single files.
- *          timeout: 30000  //timeout for xhr request
- *      }
- * })
+ * Localcache
+ * (c) 2012-2013 dollydeng@qzone
+ * Distributed under the MIT license.
  */
-define("seajs-localcache", ['manifest'], function(require){
+define("seajs-localcache", ['../demo/manifest'], function(require){
     if(!window.localStorage || seajs.data.debug) return
 
     var module = seajs.Module,
@@ -52,9 +35,10 @@ define("seajs-localcache", ['manifest'], function(require){
                  * delete localstorage items which are not in latest manifest
                  */
                 var len = localStorage.length
+                var prefix = (data.localcache && data.localcache.prefix) || 'http:'
                 for(var i=len-1;i>=0;i--){
                     var key = localStorage.key(i)
-                    if(key.indexOf('http:') != 0) continue  //Notice: change the search pattern if not match with your manifest style
+                    if(key.indexOf(prefix) != 0) continue
                     if(!remoteManifest[key]){
                         localStorage.remove(key)
                     }
@@ -202,7 +186,6 @@ define("seajs-localcache", ['manifest'], function(require){
                 var file = splited.host + splited.files[i]
                 var cached = storage.get(file)
                 var cachedValidated = validate(file, cached)
-                // 排除 remoteManifest[file] 为 undefined 的情况
                 if(remoteManifest[file]){
                     needFetchAjax = true
                     if(remoteManifest[file] == localManifest[file] && cachedValidated) {
@@ -215,7 +198,7 @@ define("seajs-localcache", ['manifest'], function(require){
                 onLoad(url)  //all cached
                 return
             }
-            // 如果remoteManifest没有url的文件，直接调用fetch，可减少请求
+            // call fetch directly if all combo files are not under version control
             if(!needFetchAjax) {
                 delete fetchingList[url]
                 fetch.call(mod, requestCache)
