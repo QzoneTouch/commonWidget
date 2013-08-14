@@ -21,20 +21,25 @@ Compatible with both ios(5,6,7) and android(2.3~4.2)
 
 ```javascript
 	seajs.config({
-    		base: '../src/',
-    		alias: {
-    			'zepto': '../../public/zepto'
-    		}
-    	});
+		base: '../src/',
+		alias: {
+			'zepto': '../../public/zepto'
+		}
+	});
 
-    	function change(event) {
-    		var file = event.target.files[0];
-    		seajs.use(['zepto', 'compress'], function ($, compresser) {
-    			compresser.compress(file, {maxWidth: 800, maxHeight: 600, quality: .7, type:'image/jpeg'}, function (dataUrl) {
-    				$(document.body).append('<p><img src="' + dataUrl + '"></p>');
-    			});
-    		});
-    	}
+	function change(event) {
+		var file = event.target.files[0];
+		seajs.use(['zepto', 'compress'], function ($, compresser) {
+			compresser.compress(file, {
+				maxWidth: 800,
+				maxHeight: 600,
+				quality: .7,
+				type: 'jpeg'
+			}, function (dataUrl) {
+				$(document.body).append('<p><img src="' + dataUrl + '"></p>');
+			});
+		});
+	}
 ```
 
 ##api
