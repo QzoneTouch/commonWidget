@@ -3,16 +3,18 @@
  * (c) 2012-2013 dollydeng@qzone
  * Distributed under the MIT license.
  */
-define("seajs-localcache", ['../demo/manifest'], function(require){
+define("seajs-localcache", function(require){
     if(!window.localStorage || seajs.data.debug) return
 
     var module = seajs.Module,
         data = seajs.data,
         fetch = module.prototype.fetch,
         defaultSyntax = ['??',',']
-    var remoteManifest = require('manifest')
+    var remoteManifest = (data.localcache && data.localcache.manifest) || {} 
 
     var storage = {
+        _maxRetry: 1,
+        _force: true,
         get: function(key, parse){
             var val
             try{
@@ -26,22 +28,32 @@ define("seajs-localcache", ['../demo/manifest'], function(require){
                 return undefined
             }
         },
-        set: function(key, val){
+        set: function(key, val, force){
+            force = ( typeof force == 'undefined' ) ? this._force : force
             try{
-                localStorage.setItem(key,val)
+                localStorage.setItem(key, val)
             }catch(e){
-                /**
-                 * Default localstorage clean
-                 * delete localstorage items which are not in latest manifest
-                 */
-                var len = localStorage.length
-                var prefix = (data.localcache && data.localcache.prefix) || 'http:'
-                for(var i=len-1;i>=0;i--){
-                    var key = localStorage.key(i)
-                    if(key.indexOf(prefix) != 0) continue
-                    if(!remoteManifest[key]){
-                        localStorage.remove(key)
+                if(force) {
+                    var max = this._maxRetry
+                    while(max > 0) {
+                        max --
+                        this.remove()
+                        this.set(key, val, false)
                     }
+                }
+            }
+        },
+        remove: function(){
+            /**
+             * Default localstorage clean
+             * delete localstorage items which are not in latest manifest
+             */
+            var prefix = (data.localcache && data.localcache.prefix) || /^https?:/
+            for(var i=localStorage.length-1; i>=0; i--) {
+                var key = localStorage.key(i)
+                if(!prefix.test(key)) continue  //Notice: change the search pattern if not match with your manifest style
+                if(!remoteManifest[key]){
+                    localStorage.removeItem(key)
                 }
             }
         }
@@ -61,7 +73,7 @@ define("seajs-localcache", ['../demo/manifest'], function(require){
      * @return {Boolean}
      */
     var validate = (data.localcache && data.localcache.validate) || function(url, code){
-        if(code && code.indexOf('define') >= 0) return true
+        if(code) return true
         else return false
     }
 
@@ -96,7 +108,18 @@ define("seajs-localcache", ['../demo/manifest'], function(require){
     var use = function(url, code){
         code += '//@ sourceURL='+ url  //for chrome debug
         if(code && /\S/.test(code)){
-            (window.execScript || function(data){ window['eval'].call(window,data)})(code)
+            if(/\.css(?:\?|$)/i.test(url)) {
+                var doc = document,  
+                    node = doc.createElement('style');
+                doc.getElementsByTagName("head")[0].appendChild(node);
+                if(node.styleSheet) {
+                  node.styleSheet.cssText = code;
+                } else {
+                  node.appendChild(doc.createTextNode(code));
+                }
+            } else {
+                (window.execScript || function(data){ window['eval'].call(window,data)})(code)
+            }
         }
     }
 
