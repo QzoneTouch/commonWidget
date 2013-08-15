@@ -14,7 +14,7 @@ define("seajs-localcache", function(require){
 
     var storage = {
         _maxRetry: 1,
-        _force: true,
+        _retry: true,
         get: function(key, parse){
             var val
             try{
@@ -28,12 +28,12 @@ define("seajs-localcache", function(require){
                 return undefined
             }
         },
-        set: function(key, val, force){
-            force = ( typeof force == 'undefined' ) ? this._force : force
+        set: function(key, val, retry){
+            retry = ( typeof retry == 'undefined' ) ? this._retry : retry
             try{
                 localStorage.setItem(key, val)
             }catch(e){
-                if(force) {
+                if(retry) {
                     var max = this._maxRetry
                     while(max > 0) {
                         max --
@@ -48,7 +48,7 @@ define("seajs-localcache", function(require){
              * Default localstorage clean
              * delete localstorage items which are not in latest manifest
              */
-            var prefix = (data.localcache && data.localcache.prefix) || /^https?:/
+            var prefix = (data.localcache && data.localcache.prefix) || /^https?\:/
             for(var i=localStorage.length-1; i>=0; i--) {
                 var key = localStorage.key(i)
                 if(!prefix.test(key)) continue  //Notice: change the search pattern if not match with your manifest style
@@ -106,7 +106,6 @@ define("seajs-localcache", function(require){
      * @param code
      */
     var use = function(url, code){
-        code += '//@ sourceURL='+ url  //for chrome debug
         if(code && /\S/.test(code)){
             if(/\.css(?:\?|$)/i.test(url)) {
                 var doc = document,  
@@ -118,6 +117,7 @@ define("seajs-localcache", function(require){
                   node.appendChild(doc.createTextNode(code));
                 }
             } else {
+                code += '//@ sourceURL='+ url  //for chrome debug
                 (window.execScript || function(data){ window['eval'].call(window,data)})(code)
             }
         }
