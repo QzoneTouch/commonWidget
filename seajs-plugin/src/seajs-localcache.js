@@ -109,16 +109,16 @@ define("seajs-localcache", function(require){
         if(code && /\S/.test(code)){
             if(/\.css(?:\?|$)/i.test(url)) {
                 var doc = document,  
-                    node = doc.createElement('style');
-                doc.getElementsByTagName("head")[0].appendChild(node);
+                    node = doc.createElement('style')
+                doc.getElementsByTagName("head")[0].appendChild(node)
                 if(node.styleSheet) {
-                  node.styleSheet.cssText = code;
+                  node.styleSheet.cssText = code
                 } else {
-                  node.appendChild(doc.createTextNode(code));
+                  node.appendChild(doc.createTextNode(code))
                 }
             } else {
                 code += '//@ sourceURL='+ url  //for chrome debug
-                (window.execScript || function(data){ window['eval'].call(window,data)})(code)
+                ;(window.execScript || function(data){ window['eval'].call(window,data)})(code)
             }
         }
     }
