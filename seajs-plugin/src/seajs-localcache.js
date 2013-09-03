@@ -148,7 +148,7 @@ define("seajs-localcache", function(require){
      * Default: split by define(function(){})
      * @param code
      */
-    var splitCombo = (data.localcache && data.localcache.splitCombo) || function(code){
+    var splitCombo = (data.localcache && data.localcache.splitCombo) || function(code, url, files){
         var arr = code.split('define')
         var result = []
         for(var i= 0,len = arr.length;i<len;i++){
@@ -235,7 +235,7 @@ define("seajs-localcache", function(require){
                     fetch.call(mod, requestCache)
                     return
                 }
-                var splitedCode = splitCombo(resp)
+                var splitedCode = splitCombo(resp, comboUrl, splited.files)
                 if(splited.files.length == splitedCode.length){
                     //ensure they are matched with each other
                     for(var i= 0,len = splited.files.length;i<len;i++){
