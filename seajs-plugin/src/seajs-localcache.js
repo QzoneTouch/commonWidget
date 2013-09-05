@@ -198,7 +198,7 @@ define("seajs-localcache", function(require){
                         onLoad(url)
                     }else{
                         delete fetchingList[url]
-                        fetch.call(mod, requestCache)
+                        fetch.call(mod)
                     }
                 })
             }
