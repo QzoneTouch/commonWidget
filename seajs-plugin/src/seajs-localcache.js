@@ -198,7 +198,7 @@ define("seajs-localcache", function(require){
                         onLoad(url)
                     }else{
                         delete fetchingList[url]
-                        fetch.call(mod, requestCache)
+                        fetch.call(mod)
                     }
                 })
             }
@@ -231,25 +231,25 @@ define("seajs-localcache", function(require){
                 comboUrl = splited.host + syntax[0] + splited.files.join(syntax[1])
             fetchAjax(comboUrl + '?v='+Math.random().toString(), function(resp){
                 if(!resp){
-                    delete fetchingList[url]
-                    fetch.call(mod, requestCache)
-                    return
+                    throw new Error('Could not load: ' + comboUrl)
                 }
                 var splitedCode = splitCombo(resp, comboUrl, splited.files)
                 if(splited.files.length == splitedCode.length){
                     //ensure they are matched with each other
                     for(var i= 0,len = splited.files.length;i<len;i++){
                         var file = splited.host + splited.files[i]
-                        localManifest[file] = remoteManifest[file]
-                        storage.set(file, splitedCode[i])
+                        if(remoteManifest[file]) {
+                            localManifest[file] = remoteManifest[file]
+                            storage.set(file, splitedCode[i])
+                        }
                         use(file, splitedCode[i])
                     }
                     storage.set('manifest', JSON.stringify(localManifest))
                     onLoad(url)
                 }else{
                     //filenames and codes not matched, fetched code is broken at somewhere.
-                    delete fetchingList[url]
-                    fetch.call(mod, requestCache)
+                    use(url, resp)
+                    onLoad(url)
                 }
             })
         }else{
