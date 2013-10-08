@@ -1,0 +1,63 @@
+<html><head>
+    <meta charset="utf-8">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta name="apple-touch-fullscreen" content="yes">
+    <meta name="format-detection" content="telephone=no,address=no">
+    <meta name="viewport" content="width=device-width, user-scalable=0, minimum-scale=1.0, maximum-scale=1.0">
+    <title>Manifest bug</title>
+    <style>
+        .none{display: none}
+    </style>
+</head>
+<body>
+
+
+<div>
+    hash value
+    <input type="text" id="count" value="0" style="width: 100px;">
+</div>
+<br>
+<button id="goBack" style="width: 100px;height: 30px;">back</button>
+<br>
+<br>
+<button id="goForward" style="width: 100px;height: 30px;">forward</button>
+
+
+<script>
+
+    function onhashChange(e){
+        var cnt = getCount();
+        window.countText.value = cnt + "";
+    }
+
+    function getCount()
+    {
+        var hash = location.hash;
+        var obj = JSON.parse(hash.replace('#', '{"').replace(/&/ig, '","').replace(/\=/ig, '":"') + '"}');
+        return obj.count;
+    }
+
+    function goBack()
+    {
+        history.back();
+    }
+
+    function goForward()
+    {
+        count++;
+        location.hash = "#count=" + count;
+    }
+
+    window.onload = function(e){
+        window.count = 0;
+        window.countText = document.getElementById("count");
+        window.goBackBtn = document.getElementById("goBack");
+        window.goForwardBtn = document.getElementById("goForward");
+        goBackBtn.addEventListener("click", goBack, false);
+        goForwardBtn.addEventListener("click", goForward, false);
+        window.addEventListener("hashchange", onhashChange, false);
+    };
+</script>
+
+</body></html>
