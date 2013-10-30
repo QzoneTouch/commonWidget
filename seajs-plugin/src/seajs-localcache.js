@@ -61,7 +61,7 @@ define("seajs-localcache", function(require){
 
     var localManifest = storage.get('manifest',true) || {}
 
-    if(!localManifest && !remoteManifest){
+    if(!remoteManifest){
         //failed to fetch latest version and local version is broken.
         return
     }
