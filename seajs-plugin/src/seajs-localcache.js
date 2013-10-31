@@ -255,6 +255,10 @@ define("seajs-localcache", function(require){
             })
         }else{
             //not in version control, use default fetch method
+            if(localManifest[url]){
+                delete localManifest[url]
+                storage.set('manifest', JSON.stringify(localManifest))
+            }
             fallback(url)
         }
     }
