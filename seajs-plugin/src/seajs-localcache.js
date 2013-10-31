@@ -179,7 +179,12 @@ define("seajs-localcache", function(require){
         }
         fetchingList[url] = [mod]
 
-        if(remoteManifest[url] && !isComboUrl){
+        var fallback = function(url){
+            delete fetchingList[url]
+            fetch.call(mod,requestCache)
+        }
+
+        if(!isComboUrl && remoteManifest[url]){
             //in version control
             var cached = storage.get(url)
             var cachedValidated = validate(url, cached)
@@ -197,8 +202,7 @@ define("seajs-localcache", function(require){
                         use(url, resp)
                         onLoad(url)
                     }else{
-                        delete fetchingList[url]
-                        fetch.call(mod, requestCache)
+                        fallback(url)
                     }
                 })
             }
@@ -223,16 +227,14 @@ define("seajs-localcache", function(require){
             }
             // call fetch directly if all combo files are not under version control
             if(!needFetchAjax) {
-                delete fetchingList[url]
-                fetch.call(mod, requestCache)
+                fallback(url)
                 return
             }
             var syntax = data.comboSyntax || defaultSyntax,
                 comboUrl = splited.host + syntax[0] + splited.files.join(syntax[1])
             fetchAjax(comboUrl + '?v='+Math.random().toString(), function(resp){
                 if(!resp){
-                    delete fetchingList[url]
-                    fetch.call(mod, requestCache)
+                    fallback(url)
                     return
                 }
                 var splitedCode = splitCombo(resp, comboUrl, splited.files)
@@ -248,14 +250,12 @@ define("seajs-localcache", function(require){
                     onLoad(url)
                 }else{
                     //filenames and codes not matched, fetched code is broken at somewhere.
-                    delete fetchingList[url]
-                    fetch.call(mod, requestCache)
+                    fallback(url)
                 }
             })
         }else{
             //not in version control, use default fetch method
-            delete fetchingList[url]
-            fetch.call(mod, requestCache)
+            fallback(url)
         }
     }
 
