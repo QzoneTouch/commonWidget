@@ -37,13 +37,18 @@ define("seajs-localcache", function(require){
                     var max = this._maxRetry
                     while(max > 0) {
                         max --
-                        this.remove()
+                        this.removeAll()
                         this.set(key, val, false)
                     }
                 }
             }
         },
-        remove: function(){
+        remove: function(url){
+            try{
+                localStorage.removeItem(url)
+            }catch(e){}
+        },
+        removeAll: function(){
             /**
              * Default localstorage clean
              * delete localstorage items which are not in latest manifest
@@ -73,31 +78,28 @@ define("seajs-localcache", function(require){
      * @return {Boolean}
      */
     var validate = (data.localcache && data.localcache.validate) || function(url, code){
-        if(code) return true
-        else return false
+        if(!code || !url) return false
+        else return true
     }
 
     var fetchAjax = function(url, callback){
-        (function(_callback){
-            var xhr = new window.XMLHttpRequest()
-            var timer = setTimeout(function(){
-                xhr.abort()
-                _callback(null)
-            }, (data.localcache && data.localcache.timeout) || 30000)
-            xhr.open('GET',url,true)
-            xhr.onreadystatechange = function(){
-                if(xhr.readyState === 4){
-                    clearTimeout(timer)
-                    if(xhr.status === 200){
-                        _callback(xhr.responseText)
-                    }else{
-                        _callback(null)
-                    }
+        var xhr = new window.XMLHttpRequest()
+        var timer = setTimeout(function(){
+            xhr.abort()
+            callback(null)
+        }, (data.localcache && data.localcache.timeout) || 30000)
+        xhr.open('GET',url,true)
+        xhr.onreadystatechange = function(){
+            if(xhr.readyState === 4){
+                clearTimeout(timer)
+                if(xhr.status === 200){
+                    callback(xhr.responseText)
+                }else{
+                    callback(null)
                 }
             }
-            xhr.send(null)
-
-        })(callback)
+        }
+        xhr.send(null)
     }
 
     /**
@@ -117,10 +119,15 @@ define("seajs-localcache", function(require){
                   node.appendChild(doc.createTextNode(code))
                 }
             } else {
-                code += '//@ sourceURL='+ url  //for chrome debug
-                ;(window.execScript || function(data){ window['eval'].call(window,data)})(code)
+                try{
+                    code += '//@ sourceURL='+ url  //for chrome debug
+                    ;(window.execScript || function(data){ window['eval'].call(window,data)})(code)
+                }catch(e){
+                    return false
+                }
             }
         }
+        return true
     }
 
     var isCombo = function(url){
@@ -190,17 +197,23 @@ define("seajs-localcache", function(require){
             var cachedValidated = validate(url, cached)
             if(remoteManifest[url] == localManifest[url] && cachedValidated){
                 //cached version is ready to go
-                use(url, cached)
-                onLoad(url)
+                if(!use(url, cached)){
+                    fallback(url)
+                }else{
+                    onLoad(url)
+                }
             }else{
                 //otherwise, get latest version from network
                 fetchAjax(url + '?v='+Math.random().toString(), function(resp){
                     if(resp && validate(url, resp)){
-                        localManifest[url] = remoteManifest[url]
-                        storage.set('manifest', JSON.stringify(localManifest))  //update one by one
-                        storage.set(url, resp)
-                        use(url, resp)
-                        onLoad(url)
+                        if(!use(url, resp)){
+                            fallback(url)
+                        }else{
+                            localManifest[url] = remoteManifest[url]
+                            storage.set('manifest', JSON.stringify(localManifest))  //update one by one
+                            storage.set(url, resp)
+                            onLoad(url)
+                        }
                     }else{
                         fallback(url)
                     }
@@ -242,9 +255,13 @@ define("seajs-localcache", function(require){
                     //ensure they are matched with each other
                     for(var i= 0,len = splited.files.length;i<len;i++){
                         var file = splited.host + splited.files[i]
-                        localManifest[file] = remoteManifest[file]
-                        storage.set(file, splitedCode[i])
-                        use(file, splitedCode[i])
+                        if(!use(file, splitedCode[i])){
+                            fallback(url)
+                            return
+                        }else{
+                            localManifest[file] = remoteManifest[file]
+                            storage.set(file, splitedCode[i])
+                        }
                     }
                     storage.set('manifest', JSON.stringify(localManifest))
                     onLoad(url)
@@ -258,10 +275,9 @@ define("seajs-localcache", function(require){
             if(localManifest[url]){
                 delete localManifest[url]
                 storage.set('manifest', JSON.stringify(localManifest))
+                storage.remove(url)
             }
             fallback(url)
         }
     }
-
-
 })
