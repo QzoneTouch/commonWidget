@@ -52,7 +52,7 @@ define(function (require) {
 			quality: .8
 		}, picParam);
 
-		getImageMeta(file, function (meta) {
+		getImageMeta(file, function (err, meta) {
 
 			// if file is a jpeg image,
 			// using exif messagees
