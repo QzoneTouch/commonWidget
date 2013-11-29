@@ -19,7 +19,7 @@ Try open demo/imageview.html on your phone or in simulator(chrome with dev tool)
 Display fetched photos
 ~~~~javascript
 seajs.use('imageview',function(imageview){
-  var view = iamgeview.get('./init');
+  var view = imageview.get('./init');
   view.init([], 0, {
     onRequestMore: function(photo, delta, index){
       $.get('getPhotoUrl',function(photos){
