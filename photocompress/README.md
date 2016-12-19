@@ -34,7 +34,7 @@ Compatible with both ios(5,6,7) and android(2.3~4.2)
 				maxWidth: 800,
 				maxHeight: 600,
 				quality: .7,
-				type: 'jpeg'
+				type: 'image/jpeg'
 			}, function (dataUrl) {
 				$(document.body).append('<p><img src="' + dataUrl + '"></p>');
 			});
