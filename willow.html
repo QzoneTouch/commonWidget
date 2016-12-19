@@ -79,6 +79,17 @@
 		<div class="update">更新记录</div>
 		<ul>
 			<li class="item">
+				<h3 class="title">1.5.1 - (2016-12-19)</h3>
+				<ul>
+					<li>修复Rule使用正则表达式时，匹配组计数错误</li>
+					<li>支持域名替换
+						<sub>注意这个功能要求规则以http开头， 以 / 结尾</sub>
+					</li>
+					<li>支持代理HEAD请求，会根据Rule配置模拟返回HEAD response所需的文件长度，类型信息，支持所有类型的rule，包括combo</li>
+					<li>修复一处退出Fiddler时的报错</li>
+				</ul>
+			</li>
+			<li class="item">
 				<h3 class="title">1.4.1 - (2014-5-20)</h3>
 				<ul>
 					<li>修复项目导出报错</li>
